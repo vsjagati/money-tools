@@ -3,6 +3,28 @@
 US retirement calculators. Every number cited to a public source; every rule
 tested against SSA's own published percentages. See `docs/SOURCES.md`.
 
+## Install
+
+**Claude Code** (one command each):
+
+```
+/plugin marketplace add vsjagati/money-tools
+/plugin install money-tools@money-tools-marketplace
+```
+
+**Any MCP client** (Cursor, Claude Desktop connectors, Goose, ...): add a
+remote server with the URL
+
+```
+https://money-tools-547074823179.asia-south1.run.app/mcp
+```
+
+**Just use the calculators**: [Social Security break-even](https://money-tools-547074823179.asia-south1.run.app/)
+· [Roth conversion IRMAA](https://money-tools-547074823179.asia-south1.run.app/irmaa)
+
+Also listed in the [official MCP registry](https://registry.modelcontextprotocol.io):
+`io.github.vsjagati/money-tools`.
+
 ## Tools
 
 - **Social Security break-even** — monthly benefit and cumulative totals for
