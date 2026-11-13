@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.vsjagati/money-tools",
+  "title": "Money Tools",
+  "description": "US retirement calculators with every number cited to official SSA and Medicare sources.",
+  "repository": {
+    "url": "https://github.com/vsjagati/money-tools",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://money-tools-547074823179.asia-south1.run.app/mcp"
+    }
+  ]
+}
