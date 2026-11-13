@@ -21,13 +21,12 @@ python -m venv .venv
 Web: http://127.0.0.1:8080/?birth_year=1965&pia=2500
 JSON API: http://127.0.0.1:8080/api/break-even?birth_year=1965&pia=2500&ages=62,68,70
 
-## MCP server (stdio, for Claude and other MCP clients)
+## MCP server (for Claude and other MCP clients)
 
-```
-.venv/Scripts/python -m money_tools.mcp_server
-```
+Two transports, same tools (`ss_break_even`, `roth_irmaa`):
 
-Tool: `ss_break_even(birth_year, pia, claim_ages?)`.
+- **Streamable HTTP** (live): `https://money-tools-547074823179.asia-south1.run.app/mcp`
+- **stdio** (local): `.venv/Scripts/python -m money_tools.mcp_server`
 
 ## Deploy (Cloud Run, scale-to-zero)
 
