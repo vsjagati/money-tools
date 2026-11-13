@@ -1,0 +1,14 @@
+{
+  "name": "money-tools-marketplace",
+  "owner": {
+    "name": "vsjagati"
+  },
+  "plugins": [
+    {
+      "name": "money-tools",
+      "source": "./plugin",
+      "description": "US retirement calculators (Social Security break-even, Roth IRMAA) with every number cited to official SSA and Medicare sources.",
+      "category": "finance"
+    }
+  ]
+}

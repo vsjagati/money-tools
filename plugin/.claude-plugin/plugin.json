@@ -1,0 +1,11 @@
+{
+  "name": "money-tools",
+  "version": "0.1.0",
+  "description": "US retirement calculators with every number cited to official SSA and Medicare sources.",
+  "mcpServers": {
+    "money-tools": {
+      "type": "http",
+      "url": "https://money-tools-547074823179.asia-south1.run.app/mcp"
+    }
+  }
+}
