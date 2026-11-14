@@ -166,7 +166,8 @@ would cost in Part B and Part D surcharges.</p>
 <p class="note">2026 tiers from the
 <a href="https://www.medicare.gov/publications/11579-medicare-costs.pdf">official
 Medicare 2026 costs fact sheet</a> (PDF). IRMAA uses the tax return from two
-years earlier. Estimates per person; not tax advice.</p>
+years earlier. Estimates per person; not tax advice.
+See the <a href="/irmaa/brackets">full 2026 IRMAA bracket table</a>.</p>
 </body></html>"""
 
 IRMAA_RESULT = """
@@ -257,7 +258,7 @@ Lifetime Table) &middot; Treasury/IRS
 <a href="https://www.federalregister.gov/documents/2024/07/19/2024-14542/required-minimum-distributions">final
 rule 89 FR 58886</a> (RMD ages) &middot;
 <a href="https://www.irs.gov/retirement-plans/retirement-plan-and-ira-required-minimum-distributions-faqs">IRS
-RMD FAQs</a>. Not tax advice.</p>
+RMD FAQs</a>. Not tax advice. See the <a href="/rmd/table">full RMD table &amp; RMD ages by birth year</a>.</p>
 </body></html>"""
 
 RMD_RESULT = """
@@ -303,6 +304,147 @@ def rmd_api(birth_year: int, balance: float):
         return rmd_calculate(RmdRequest(birth_year=birth_year, balance=balance)).model_dump()
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"detail": e.errors()})
+
+
+IRMAA_BRACKETS_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 IRMAA Brackets (Official Medicare Tiers) - Part B &amp; Part D Costs</title>
+<meta name="description" content="The full 2026 IRMAA bracket table straight from
+Medicare's official costs fact sheet: Part B and Part D surcharges by income,
+the two-year lookback, and the cliff rule that makes one extra dollar costly.">
+<style>
+ body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;line-height:1.5}
+ h1{font-size:1.5rem} h2{font-size:1.15rem;margin-top:1.6rem}
+ table{border-collapse:collapse;margin:1rem 0}
+ th,td{border:1px solid #ccc;padding:.4rem .7rem;text-align:right;font-variant-numeric:tabular-nums}
+ th:first-child,td:first-child{text-align:left}
+ .be{background:#f0f7f0;padding:.6rem .8rem;margin:.4rem 0}
+ .note{font-size:.8rem;color:#555}
+</style></head><body>
+<h1>2026 IRMAA brackets</h1>
+<p><a href="/irmaa">Run the IRMAA calculator &rarr;</a> &nbsp; <a href="/rmd">RMD calculator &rarr;</a></p>
+<p>IRMAA (income-related monthly adjustment amount) is the surcharge Medicare
+adds to your Part B and Part D premiums once your income passes a threshold.
+For 2026 costs, Medicare reads your <b>2024</b> tax return - a two-year
+lookback.</p>
+<h2>The 2026 tiers (per person, per month)</h2>
+<table><tr><th>Tier</th><th>Single MAGI</th><th>Married filing jointly</th><th>Part B</th><th>Part D add</th></tr>
+{tiers}</table>
+<p>Part D amounts are on top of your plan's premium; the national base part D
+premium for 2026 is $38.99. Tier 1 is the standard premium - most people pay
+it with no surcharge.</p>
+<h2>Why one extra dollar hurts: the cliff rule</h2>
+<p class="be">The brackets are cliffs, not phases. Land $1 over a threshold
+and the <b>whole</b> surcharge for that tier applies for the year. A single
+filer at $109,000 pays $202.90 for Part B; at $109,001 they pay $284.10 plus a
+$14.50 Part D surcharge.</p>
+<h2>Married filing separately</h2>
+<p>The income bands collapse: at or under $109,000 you stay in tier 1, and
+above it you jump straight to tier 5 ($649.20 Part B + $83.30 Part D), then
+tier 6 from $391,000.</p>
+<h2>Can you fight a tier?</h2>
+<p>Yes. If a life-changing event - retirement, a spouse's death, divorce,
+job loss - cut your income after the year Medicare is reading, you can ask
+Social Security to reassess using <a href="https://www.ssa.gov/forms/ssa-44.html">form
+SSA-44</a>. Otherwise the tier stands until the lookback catches up with your
+real income.</p>
+<p class="note">Every figure above is from the official
+<a href="https://www.medicare.gov/publications/11579-medicare-costs.pdf">2026
+Medicare costs fact sheet</a> (PDF). MAGI here is adjusted gross income plus
+tax-exempt interest. Not tax advice.</p>
+</body></html>"""
+
+
+@app.get("/irmaa/brackets", response_class=HTMLResponse)
+def irmaa_brackets_page():
+    from money_tools.irmaa import _TIERS
+    bands = ["$109,000 or less", "$218,000 or less", "$137,000 or less",
+             "$274,000 or less", "$171,000 or less", "$342,000 or less",
+             "$205,000 or less", "$410,000 or less", "under $500,000",
+             "under $750,000", "$500,000 or more", "$750,000 or more"]
+    rows = "".join(
+        f"<tr><td>{t + 1}</td><td>{bands[2 * t]}</td><td>{bands[2 * t + 1]}</td>"
+        f"<td>${_TIERS[t][3]:,.2f}</td><td>${_TIERS[t][4]:,.2f}</td></tr>"
+        for t in range(6))
+    return HTMLResponse(IRMAA_BRACKETS_PAGE.replace("{tiers}", rows))
+
+
+RMD_TABLE_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RMD Table 2026-2027: IRS Uniform Lifetime Table &amp; RMD Ages by Birth Year</title>
+<meta name="description" content="The IRS Uniform Lifetime Table (every divisor
+from age 72 to 120+), what age your RMDs start by birth year, when the first
+one is due, and the 25% penalty for missing one - all from official sources.">
+<style>
+ body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;line-height:1.5}
+ h1{font-size:1.5rem} h2{font-size:1.15rem;margin-top:1.6rem}
+ table{border-collapse:collapse;margin:1rem 0}
+ th,td{border:1px solid #ccc;padding:.35rem .6rem;text-align:right;font-variant-numeric:tabular-nums}
+ th:first-child,td:first-child{text-align:left}
+ .be{background:#f0f7f0;padding:.6rem .8rem;margin:.4rem 0}
+ .warn{background:#fff8e8;padding:.6rem .8rem;margin:.4rem 0}
+ .note{font-size:.8rem;color:#555}
+</style></head><body>
+<h1>RMD table &amp; RMD ages</h1>
+<p><a href="/rmd">Run the RMD calculator &rarr;</a> &nbsp; <a href="/irmaa">IRMAA calculator &rarr;</a></p>
+<p>Your required minimum distribution each year is the prior December 31
+balance divided by a divisor from the IRS Uniform Lifetime Table, using the
+age you reach that year.</p>
+<h2>What age do RMDs start?</h2>
+<table><tr><th>Birth year</th><th>RMD age</th><th>First RMD year</th></tr>
+{ages}</table>
+<p class="warn">Born in 1959? The law sets the age as both 73 and 75 - final
+IRS rules have not resolved it. Plan for 73 (2032), the earlier reading.</p>
+<h2>Your first RMD gets a grace period - use it carefully</h2>
+<p class="be">The first RMD can wait until <b>April 1</b> of the following
+year. Every later RMD is due by December 31. Defer the first one and you owe
+<b>two</b> RMDs in the same year - which can push your income up into a
+higher tax bracket or an <a href="/irmaa/brackets">IRMAA tier</a>.</p>
+<h2>Uniform Lifetime Table (divisors)</h2>
+<table><tr><th>Age</th><th>Divisor</th><th>Age</th><th>Divisor</th><th>Age</th><th>Divisor</th><th>Age</th><th>Divisor</th></tr>
+{table}</table>
+<p>Example: age 75, $300,000 in IRAs last Dec 31 &rarr; $300,000 &divide; 24.6
+= <b>$12,195.12</b> must come out this year.</p>
+<h2>Miss it and the tax is 25%</h2>
+<p>A missed or short RMD faces a 25% excise tax on the amount not withdrawn,
+cut to 10% if corrected within two years (file Form 5329). Compute the RMD
+for each IRA you own; you may withdraw the total from one or more of them.
+If your sole beneficiary is a spouse 10+ years younger, the Joint Life table
+gives smaller RMDs.</p>
+<p class="note">Divisors from IRS <a href="https://www.irs.gov/pub/irs-pdf/p590b.pdf">Publication
+590-B</a> (2025), Appendix B. RMD ages from the Treasury/IRS
+<a href="https://www.federalregister.gov/documents/2024/07/19/2024-14542/required-minimum-distributions">final
+rule 89 FR 58886</a>. Deadlines and penalties from the
+<a href="https://www.irs.gov/retirement-plans/retirement-plan-and-ira-required-minimum-distributions-faqs">IRS
+RMD FAQs</a>. Not tax advice.</p>
+</body></html>"""
+
+
+@app.get("/rmd/table", response_class=HTMLResponse)
+def rmd_table_page():
+    from money_tools.rmd import _PERIODS, applicable_age
+    age_rows = [
+        ("Before 1951", "72", "the year you turned 72"),
+        ("1951 - 1958", "73", "birth year + 73 (e.g. 1957 &rarr; 2030)"),
+        ("1959", "73 or 75 (unresolved)", "2032 or 2034"),
+        ("1960 or later", "75", "the year you turn 75"),
+    ]
+    ages = "".join(f"<tr><td>{y}</td><td>{a}</td><td>{f}</td></tr>" for y, a, f in age_rows)
+    items = sorted(_PERIODS.items())
+    cols = 4
+    per = (len(items) + cols - 1) // cols
+    cells = []
+    for chunk in range(per):
+        row = ""
+        for c in range(cols):
+            i = chunk + c * per
+            if i < len(items):
+                row += f"<td>{items[i][0]}</td><td>{items[i][1]}</td>"
+        cells.append(f"<tr>{row}</tr>")
+    return HTMLResponse(RMD_TABLE_PAGE.replace("{ages}", ages)
+                        .replace("{table}", "".join(cells)))
 
 
 # MCP streamable HTTP at /mcp (stateless: Cloud Run instances come and go).

@@ -23,6 +23,9 @@ https://money-tools-547074823179.asia-south1.run.app/mcp
 · [Roth conversion IRMAA](https://money-tools-547074823179.asia-south1.run.app/irmaa)
 · [RMD](https://money-tools-547074823179.asia-south1.run.app/rmd)
 
+Reference pages: [2026 IRMAA brackets](https://money-tools-547074823179.asia-south1.run.app/irmaa/brackets)
+· [RMD table &amp; ages](https://money-tools-547074823179.asia-south1.run.app/rmd/table)
+
 Also listed in the [official MCP registry](https://registry.modelcontextprotocol.io):
 `io.github.vsjagati/money-tools`.
 
