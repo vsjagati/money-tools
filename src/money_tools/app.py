@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 
 from money_tools.breakeven import Request as CalcRequest, calculate
 from money_tools.irmaa import Request as IrmaaRequest, calculate as irmaa_calculate
+from money_tools.rmd import Request as RmdRequest, calculate as rmd_calculate
 from money_tools import __version__
 
 # MCP streamable HTTP app; mounted below. Starlette does not run a mounted
@@ -51,7 +52,8 @@ monthly benefit, total collected and the break-even age, using SSA's own rules."
  code{background:#f4f4f4;padding:0 .3rem}
 </style></head><body>
 <h1>Social Security break-even calculator</h1>
-<p><a href="/irmaa">Roth conversion &middot; IRMAA calculator &rarr;</a></p>
+<p><a href="/irmaa">Roth conversion &middot; IRMAA &rarr;</a> &nbsp;
+<a href="/rmd">Required minimum distribution (RMD) &rarr;</a></p>
 <p>Claim at 62, 67 or 70? Enter what your statement calls your benefit at full
 retirement age, and see what each claiming age pays and when waiting pays off.</p>
 <form method="get" action="/">
@@ -216,6 +218,89 @@ def irmaa_api(status: str, magi: float, conv: float = 0):
     try:
         return irmaa_calculate(IrmaaRequest(status=status, magi=magi,
                                             roth_conversion=conv)).model_dump()
+    except ValidationError as e:
+        return JSONResponse(status_code=422, content={"detail": e.errors()})
+
+
+RMD_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RMD Calculator 2026 - how much must you withdraw this year?</title>
+<meta name="description" content="Your required minimum distribution for this
+year and the next two, from the IRS Uniform Lifetime Table: amount, deadline,
+and when your first RMD is due.">
+<style>
+ body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;line-height:1.5}
+ h1{font-size:1.5rem} form{display:grid;gap:.8rem;max-width:24rem}
+ label{font-size:.9rem;display:grid;gap:.2rem}
+ input{font:inherit;padding:.4rem}
+ button{font:inherit;padding:.5rem;width:fit-content}
+ table{border-collapse:collapse;margin:1rem 0}
+ th,td{border:1px solid #ccc;padding:.4rem .7rem;text-align:right;font-variant-numeric:tabular-nums}
+ th:first-child,td:first-child{text-align:left}
+ .be{background:#f0f7f0;padding:.6rem .8rem;margin:.4rem 0}
+ .warn{background:#fff8e8;padding:.6rem .8rem;margin:.4rem 0}
+ .note{font-size:.8rem;color:#555}
+</style></head><body>
+<h1>Required minimum distribution (RMD) calculator</h1>
+<p>The IRS makes you pull a slice out of traditional IRAs every year from
+age 73. See what you must withdraw, by when, and when yours starts.</p>
+<form method="get" action="/rmd">
+ <label>Birth year <input name="birth_year" type="number" min="1935" max="1965" required value="{by}"></label>
+ <label>All traditional/SEP/SIMPLE IRA balances last Dec 31 (USD) <input name="balance" type="number" min="1" step="0.01" required value="{bal}"></label>
+ <button type="submit">Calculate</button>
+</form>
+{results}
+<p class="note">Sources: IRS
+<a href="https://www.irs.gov/pub/irs-pdf/p590b.pdf">Pub 590-B</a> (Uniform
+Lifetime Table) &middot; Treasury/IRS
+<a href="https://www.federalregister.gov/documents/2024/07/19/2024-14542/required-minimum-distributions">final
+rule 89 FR 58886</a> (RMD ages) &middot;
+<a href="https://www.irs.gov/retirement-plans/retirement-plan-and-ira-required-minimum-distributions-faqs">IRS
+RMD FAQs</a>. Not tax advice.</p>
+</body></html>"""
+
+RMD_RESULT = """
+<p class="be">{status}</p>
+<table><tr><th>Year</th><th>Your age</th><th>Divisor</th><th>RMD</th><th>Deadline</th></tr>
+{rows}</table>
+{ambiguity}
+<p class="note">{penalty}</p>
+<p class="note">{note}</p>"""
+
+
+@app.get("/rmd", response_class=HTMLResponse)
+def rmd_page(birth_year: int = 0, balance: float = 0):
+    if not birth_year or not balance:
+        return HTMLResponse(RMD_PAGE.replace("{by}", "1953")
+                            .replace("{bal}", "500000").replace("{results}", ""))
+    try:
+        req = RmdRequest(birth_year=birth_year, balance=balance)
+    except ValidationError as e:
+        return HTMLResponse(RMD_PAGE.replace("{by}", str(birth_year))
+                            .replace("{bal}", _echo(balance))
+                            .replace("{results}", f"<p class='warn'>{e.errors()[0]['msg']}</p>"))
+    r = rmd_calculate(req)
+    rows = "".join(
+        f"<tr><td>{x.year}</td><td>{x.age}</td><td>{x.distribution_period}</td>"
+        f"<td>${x.rmd:,.2f}</td><td style='text-align:left'>{x.deadline}</td></tr>"
+        for x in r.rows)
+    ambiguity = (f"<p class='warn'>{r.ambiguity_note}</p>" if r.ambiguity_note else "")
+    block = (RMD_RESULT
+             .replace("{status}", r.status)
+             .replace("{rows}", rows)
+             .replace("{ambiguity}", ambiguity)
+             .replace("{penalty}", r.penalty_note)
+             .replace("{note}", r.note))
+    return HTMLResponse(RMD_PAGE.replace("{by}", str(birth_year))
+                        .replace("{bal}", _echo(balance))
+                        .replace("{results}", block))
+
+
+@app.get("/api/rmd")
+def rmd_api(birth_year: int, balance: float):
+    try:
+        return rmd_calculate(RmdRequest(birth_year=birth_year, balance=balance)).model_dump()
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"detail": e.errors()})
 

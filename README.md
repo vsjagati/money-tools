@@ -21,6 +21,7 @@ https://money-tools-547074823179.asia-south1.run.app/mcp
 
 **Just use the calculators**: [Social Security break-even](https://money-tools-547074823179.asia-south1.run.app/)
 · [Roth conversion IRMAA](https://money-tools-547074823179.asia-south1.run.app/irmaa)
+· [RMD](https://money-tools-547074823179.asia-south1.run.app/rmd)
 
 Also listed in the [official MCP registry](https://registry.modelcontextprotocol.io):
 `io.github.vsjagati/money-tools`.
@@ -30,6 +31,11 @@ Also listed in the [official MCP registry](https://registry.modelcontextprotocol
 - **Social Security break-even** — monthly benefit and cumulative totals for
   claiming at 62/67/70 (or any whole ages), with pairwise break-even ages.
   All figures in today's dollars.
+- **Roth conversion IRMAA** — what a conversion does to Medicare Part B/D
+  costs two years later, per 2026 tiers.
+- **RMD** — this year's required minimum distribution and the next two, from
+  the IRS Uniform Lifetime Table; flags the unresolved 1959-birth ambiguity
+  in the law instead of guessing.
 
 ## Run locally
 
@@ -45,7 +51,7 @@ JSON API: http://127.0.0.1:8080/api/break-even?birth_year=1965&pia=2500&ages=62,
 
 ## MCP server (for Claude and other MCP clients)
 
-Two transports, same tools (`ss_break_even`, `roth_irmaa`):
+Two transports, same tools (`ss_break_even`, `roth_irmaa`, `rmd`):
 
 - **Streamable HTTP** (live): `https://money-tools-547074823179.asia-south1.run.app/mcp`
 - **stdio** (local): `.venv/Scripts/python -m money_tools.mcp_server`

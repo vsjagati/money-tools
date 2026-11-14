@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 src/*.egg-info/
+tmp-irs/
+tmp-shots/
+tmp-when-to-start.pdf
